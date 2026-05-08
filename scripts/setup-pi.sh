@@ -3,6 +3,10 @@
 set -e
 cd "$(dirname "$0")/.."
 
+echo "==> Installing rtk from Homebrew..."
+brew install rtk
+echo ""
+
 echo "==> Bootstrapping pi packages..."
 jq -r '.packages[]' settings.json | while read -r pkg; do
   echo "  pi install -l $pkg"

@@ -8,7 +8,6 @@
     "git:github.com/elpapi42/pi-fork",
     "npm:pi-mermaid",
     "npm:amp-themes",
-    "npm:pi-powerline-footer",
-    "npm:pi-simplify"
+    "npm:pi-powerline-footer"
   ]
 }

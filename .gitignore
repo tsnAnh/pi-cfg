@@ -1,5 +1,7 @@
 # Runtime data — do not commit
 agent/
+git/
+npm/
 
 # OS
 .DS_Store
