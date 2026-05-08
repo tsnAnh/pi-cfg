@@ -1,7 +1,13 @@
-# Runtime data — do not commit
-agent/
-git/
-npm/
+# Agent runtime data — do not commit
+agent/*
+!agent/skills/
+!agent/extensions/
+agent/extensions/**/node_modules/
+agent/extensions/**/*.lock
 
 # OS
 .DS_Store
+
+# Runtime directories
+git/
+npm/
