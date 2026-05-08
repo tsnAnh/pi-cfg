@@ -1,0 +1,5 @@
+# Runtime data — do not commit
+agent/
+
+# OS
+.DS_Store
