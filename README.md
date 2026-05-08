@@ -1,6 +1,6 @@
 # ✨ pi-cfg
 
-Your personal configuration & bootstrap toolkit for **[pi](https://github.com/earendil-works/pi-coding-agent)** — an AI coding agent that lives in your terminal.
+Your personal configuration & bootstrap toolkit for **[pi](https://github.com/earendil-works/pi)** — an AI coding agent that lives in your terminal.
 
 This repo stores shared pi settings, community packages, and one-command setup so you can get pi running on any machine in minutes.
 
