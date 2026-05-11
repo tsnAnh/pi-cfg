@@ -20,10 +20,11 @@ chmod +x scripts/setup-pi.sh
 That's it! The script will:
 
 1. Install **rtk** via [Homebrew](https://brew.sh)
-2. Bootstrap all pi packages listed in `settings.json`
-3. Drop everything into your `~/.pi/` directory — ready to go
+2. Build and install **CodeMapper (`cm`)** from source via Cargo
+3. Bootstrap all pi packages listed in `settings.json`
+4. Drop everything into your `~/.pi/` directory — ready to go
 
-> **Prerequisites:** [Homebrew](https://brew.sh), [Node.js](https://nodejs.org/), and [uv](https://github.com/astral-sh/uv) (`brew install uv`) should be installed before running the setup script.
+> **Prerequisites:** [Homebrew](https://brew.sh), [Node.js](https://nodejs.org/), and [Rust](https://rustup.rs) (`curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`) should be installed before running the setup script.
 
 ---
 
