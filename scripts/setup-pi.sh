@@ -8,7 +8,7 @@ brew install rtk
 echo ""
 
 echo "==> Installing CodeMapper..."
-pip install git+https://github.com/MikeyBeez/codemapper.git
+pip3 install git+https://github.com/MikeyBeez/codemapper.git
 echo ""
 
 echo "==> Bootstrapping pi packages..."
