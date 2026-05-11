@@ -16,7 +16,7 @@ brew install rtk
 echo ""
 
 echo "==> Installing CodeMapper..."
-uv tool install git+https://github.com/MikeyBeez/codemapper.git
+uv tool install codemapper
 echo ""
 
 echo "==> Bootstrapping pi packages..."
