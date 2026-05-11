@@ -39,6 +39,7 @@ That's it! The script will:
 | **pi-observational-memory** | NPM | Observational memory & recall across sessions |
 | **pi-mermaid** | NPM | Mermaid diagram generation & rendering |
 | **amp-themes** | NPM | UI themes for pi (dark, light, gruvbox, etc.) |
+| **pi-caveman** | Git | Ultra-compressed communication mode (slash tokens ~75%) |
 | **pi-powerline-footer** | NPM | Powerline-style footer for the pi TUI |
 
 ---
