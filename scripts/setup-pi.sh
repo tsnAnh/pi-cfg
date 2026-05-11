@@ -25,5 +25,22 @@ jq -r '.packages[]' settings.json | while read -r pkg; do
   pi install "$pkg"
 done
 
+# Link pi-superpowers skills into agent skills dir
+SUPERPOWERS_DIR="$HOME/.pi/agent/git/github.com/coctostan/pi-superpowers"
+if [ -d "$SUPERPOWERS_DIR/skills" ]; then
+  echo ""
+  echo "==> Linking pi-superpowers skills..."
+  SKILLS_DIR="$HOME/.pi/agent/skills"
+  mkdir -p "$SKILLS_DIR"
+  for skill in "$SUPERPOWERS_DIR/skills"/*/; do
+    name=$(basename "$skill")
+    link="$SKILLS_DIR/$name"
+    if [ ! -e "$link" ]; then
+      ln -sf "$skill" "$link"
+      echo "  → Linked $name"
+    fi
+  done
+fi
+
 echo ""
 echo "==> Done. Verify with: pi list"

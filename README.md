@@ -32,7 +32,6 @@ That's it! The script will:
 
 | Package | Type | Description |
 |---|---|---|
-| **pi-codemapper** | Git | Code symbol mapping & static analysis for navigation |
 | **pi-minimal-subagent** | Git | Lightweight subagent delegation for parallel tasks |
 | **pi-fork** | Git | Fork-based isolated subprocess execution |
 | **pi-hooks** | NPM | Lifecycle hooks for the pi agent |
@@ -48,7 +47,7 @@ That's it! The script will:
 
 ## 🧠 Skills
 
-This repo includes the [pi-superpowers](https://github.com/coctostan/pi-superpowers) skill suite, adapted from Jesse Vincent's [Superpowers](https://github.com/obra/superpowers). Each skill is loaded on demand by pi:
+The [pi-superpowers](https://github.com/coctostan/pi-superpowers) skill suite is installed and auto-linked by the setup script. Each skill is loaded on demand by pi:
 
 | Skill | Description |
 |---|---|
@@ -77,7 +76,7 @@ All packages are declared in [`settings.json`](settings.json). Add or remove pac
   "packages": [
     "npm:pi-hooks",
     "npm:pi-rtk-optimizer",
-    "git:github.com/elpapi42/pi-codemapper",
+    "git:github.com/elpapi42/pi-minimal-subagent",
     ...
   ]
 }
