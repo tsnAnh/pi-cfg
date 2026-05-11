@@ -7,6 +7,10 @@ echo "==> Installing rtk from Homebrew..."
 brew install rtk
 echo ""
 
+echo "==> Installing CodeMapper..."
+pip install git+https://github.com/MikeyBeez/codemapper.git
+echo ""
+
 echo "==> Bootstrapping pi packages..."
 jq -r '.packages[]' settings.json | while read -r pkg; do
   echo "  pi install -l $pkg"
