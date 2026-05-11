@@ -9,6 +9,7 @@
     "npm:pi-mermaid",
     "npm:amp-themes",
     "npm:pi-powerline-footer",
-    "git:github.com/v2nic/pi-caveman"
+    "git:github.com/v2nic/pi-caveman",
+    "git:github.com/coctostan/pi-superpowers"
   ]
 }

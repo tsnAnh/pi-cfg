@@ -41,6 +41,29 @@ That's it! The script will:
 | **amp-themes** | NPM | UI themes for pi (dark, light, gruvbox, etc.) |
 | **pi-caveman** | Git | Ultra-compressed communication mode (slash tokens ~75%) |
 | **pi-powerline-footer** | NPM | Powerline-style footer for the pi TUI |
+| **pi-superpowers** | Git | Structured workflow skills (brainstorming, TDD, debugging, code review, etc.) |
+
+---
+
+## 🧠 Skills
+
+This repo includes the [pi-superpowers](https://github.com/coctostan/pi-superpowers) skill suite, adapted from Jesse Vincent's [Superpowers](https://github.com/obra/superpowers). Each skill is loaded on demand by pi:
+
+| Skill | Description |
+|---|---|
+| **brainstorming** | Socratic design refinement |
+| **writing-plans** | Detailed implementation plans with TDD tasks |
+| **executing-plans** | Batch execution with checkpoints |
+| **subagent-driven-development** 🤖 | Parallel task execution with review |
+| **test-driven-development** | RED-GREEN-REFACTOR cycle |
+| **systematic-debugging** | 4-phase root cause investigation |
+| **verification-before-completion** | Evidence before claims |
+| **requesting-code-review** 🤖 | Pre-merge review workflow |
+| **receiving-code-review** | Technical evaluation of feedback |
+| **dispatching-parallel-agents** 🤖 | Concurrent subagent workflows |
+| **using-git-worktrees** | Isolated development branches |
+| **finishing-a-development-branch** | Merge/PR decision workflow |
+| **writing-skills** 🤖 | TDD applied to process documentation |
 
 ---
 
