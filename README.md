@@ -23,7 +23,7 @@ That's it! The script will:
 2. Bootstrap all pi packages listed in `settings.json`
 3. Drop everything into your `~/.pi/` directory — ready to go
 
-> **Prerequisites:** [Homebrew](https://brew.sh) and [Node.js](https://nodejs.org/) should be installed before running the setup script.
+> **Prerequisites:** [Homebrew](https://brew.sh), [Node.js](https://nodejs.org/), and [pipx](https://pipx.pypa.io) (`brew install pipx`) should be installed before running the setup script.
 
 ---
 
