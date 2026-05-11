@@ -19,6 +19,22 @@ echo "==> Installing CodeMapper..."
 uv tool install codemapper
 echo ""
 
+# Set up cm alias for CodeMapper
+if command -v codemapper &>/dev/null && ! command -v cm &>/dev/null; then
+  rc_file="$HOME/.zshrc"
+  [ ! -f "$rc_file" ] && rc_file="$HOME/.bashrc"
+  if [ -f "$rc_file" ]; then
+    if ! grep -q "alias cm=" "$rc_file" 2>/dev/null; then
+      echo "alias cm='codemapper'" >> "$rc_file"
+      echo "  → Added 'cm' alias to $rc_file"
+      echo "  → Run 'source $rc_file' or restart your shell to use it."
+    else
+      echo "  → 'cm' alias already exists in $rc_file — skipping."
+    fi
+  fi
+fi
+echo ""
+
 echo "==> Bootstrapping pi packages..."
 jq -r '.packages[]' settings.json | while read -r pkg; do
   echo "  pi install -l $pkg"
