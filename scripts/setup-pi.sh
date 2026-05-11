@@ -4,7 +4,7 @@ set -e
 cd "$(dirname "$0")/.."
 
 # Prerequisite checks
-for cmd in brew pipx jq; do
+for cmd in brew uv jq; do
   if ! command -v "$cmd" &>/dev/null; then
     echo "❌ Error: '$cmd' is required but not installed."
     exit 1
@@ -16,7 +16,7 @@ brew install rtk
 echo ""
 
 echo "==> Installing CodeMapper..."
-pipx install git+https://github.com/MikeyBeez/codemapper.git
+uv tool install git+https://github.com/MikeyBeez/codemapper.git
 echo ""
 
 echo "==> Bootstrapping pi packages..."
