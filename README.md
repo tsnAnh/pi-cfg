@@ -1,14 +1,12 @@
 # ✨ pi-cfg
 
-Your personal configuration & bootstrap toolkit for **[pi](https://github.com/earendil-works/pi)** — an AI coding agent that lives in your terminal.
+My personal **pi** agent configuration — packages, skills, and bootstrap scripts to get a full coding-agent environment running on any machine in minutes.
 
-This repo stores shared pi settings, community packages, and one-command setup so you can get pi running on any machine in minutes.
+> **[pi](https://github.com/earendil-works/pi)** is an AI coding agent that lives in your terminal.
 
 ---
 
 ## 🚀 Quick Start
-
-Clone this repo into your home directory and run the setup script:
 
 ```bash
 git clone git@github.com:tsnAnh/pi-cfg.git ~/.pi
@@ -17,112 +15,104 @@ chmod +x scripts/setup-pi.sh
 ./scripts/setup-pi.sh
 ```
 
-That's it! The script will:
+The setup script handles everything:
 
-1. Install **rtk** via [Homebrew](https://brew.sh)
-2. Build and install **CodeMapper (`cm`)** from source via Cargo
-3. Bootstrap all pi packages listed in `settings.json`
-4. Drop everything into your `~/.pi/` directory — ready to go
+1. **rtk** — installed via Homebrew
+2. **CodeMapper (`cm`)** — built from [source](https://github.com/p1rallels/codemapper) via Cargo
+3. **Pi packages** — all packages in `settings.json` installed globally
+4. **Skills** — pi-superpowers symlinked into `~/.pi/agent/skills/`
 
-> **Prerequisites:** [Homebrew](https://brew.sh), [Node.js](https://nodejs.org/), and [Rust](https://rustup.rs) (`curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`) should be installed before running the setup script.
+> **Prerequisites:** [Homebrew](https://brew.sh), [Node.js](https://nodejs.org/), and [Rust](https://rustup.rs)
 
 ---
 
-## 📦 Included Packages
+## 📦 Packages
 
-| Package | Type | Description |
+| Package | Source | What it does |
 |---|---|---|
-| **pi-minimal-subagent** | Git | Lightweight subagent delegation for parallel tasks |
-| **pi-fork** | Git | Fork-based isolated subprocess execution |
-| **pi-hooks** | NPM | Lifecycle hooks for the pi agent |
-| **pi-rtk-optimizer** | NPM | Response token optimization for cost & latency |
-| **pi-observational-memory** | NPM | Observational memory & recall across sessions |
-| **pi-mermaid** | NPM | Mermaid diagram generation & rendering |
-| **amp-themes** | NPM | UI themes for pi (dark, light, gruvbox, etc.) |
-| **pi-caveman** | Git | Ultra-compressed communication mode (slash tokens ~75%) |
-| **pi-powerline-footer** | NPM | Powerline-style footer for the pi TUI |
-| **pi-superpowers** | Git | Structured workflow skills (brainstorming, TDD, debugging, code review, etc.) |
+| **pi-codemapper** | [elpapi42](https://github.com/elpapi42/pi-codemapper) | CodeMapper integration for pi agent |
+| **pi-minimal-subagent** | [elpapi42](https://github.com/elpapi42/pi-minimal-subagent) | Lightweight subagent delegation |
+| **pi-fork** | [elpapi42](https://github.com/elpapi42/pi-fork) | Fork-based isolated subprocess execution |
+| **pi-hooks** | npm | Lifecycle hooks for pi |
+| **pi-rtk-optimizer** | npm | Response token optimization |
+| **pi-observational-memory** | npm | Memory & recall across sessions |
+| **pi-mermaid** | npm | Mermaid diagram generation |
+| **amp-themes** | npm | UI themes (dark, light, gruvbox…) |
+| **pi-caveman** | [v2nic](https://github.com/v2nic/pi-caveman) | Ultra-compressed comms (~75% fewer tokens) |
+| **pi-powerline-footer** | npm | Powerline-style TUI footer |
+| **pi-superpowers** | [coctostan](https://github.com/coctostan/pi-superpowers) | Structured workflow skills |
 
 ---
 
 ## 🧠 Skills
 
-The [pi-superpowers](https://github.com/coctostan/pi-superpowers) skill suite is installed and auto-linked by the setup script. Each skill is loaded on demand by pi:
+Installed via [pi-superpowers](https://github.com/coctostan/pi-superpowers) and symlinked automatically:
 
 | Skill | Description |
 |---|---|
-| **brainstorming** | Socratic design refinement |
-| **writing-plans** | Detailed implementation plans with TDD tasks |
-| **executing-plans** | Batch execution with checkpoints |
-| **subagent-driven-development** 🤖 | Parallel task execution with review |
-| **test-driven-development** | RED-GREEN-REFACTOR cycle |
-| **systematic-debugging** | 4-phase root cause investigation |
-| **verification-before-completion** | Evidence before claims |
-| **requesting-code-review** 🤖 | Pre-merge review workflow |
-| **receiving-code-review** | Technical evaluation of feedback |
-| **dispatching-parallel-agents** 🤖 | Concurrent subagent workflows |
-| **using-git-worktrees** | Isolated development branches |
-| **finishing-a-development-branch** | Merge/PR decision workflow |
-| **writing-skills** 🤖 | TDD applied to process documentation |
+| `brainstorming` | Socratic design refinement |
+| `writing-plans` | Implementation plans with TDD tasks |
+| `executing-plans` | Batch execution with checkpoints |
+| `subagent-driven-development` | Parallel task execution with review |
+| `test-driven-development` | RED-GREEN-REFACTOR cycle |
+| `systematic-debugging` | 4-phase root cause investigation |
+| `verification-before-completion` | Evidence before claims |
+| `requesting-code-review` | Pre-merge review workflow |
+| `receiving-code-review` | Technical evaluation of feedback |
+| `dispatching-parallel-agents` | Concurrent subagent workflows |
+| `using-git-worktrees` | Isolated development branches |
+| `finishing-a-development-branch` | Merge/PR decision workflow |
+| `writing-skills` | TDD for process documentation |
+
+🤖 = uses subagent dispatching
 
 ---
 
-## ⚙️ Configuration
+## ⚙️ Config
 
-All packages are declared in [`settings.json`](settings.json). Add or remove packages there, then re-run `./scripts/setup-pi.sh` to sync.
+Packages are declared in [`settings.json`](settings.json):
 
 ```json
 {
   "packages": [
     "npm:pi-hooks",
-    "npm:pi-rtk-optimizer",
-    "git:github.com/elpapi42/pi-minimal-subagent",
-    ...
+    "git:github.com/elpapi42/pi-codemapper",
+    "git:github.com/coctostan/pi-superpowers"
   ]
 }
 ```
 
-Supported sources:
-- `npm:<package-name>` — install from the npm registry
-- `git:<repo-url>` — clone from a Git repository
+Sources: `npm:<name>` or `git:<repo>`
+
+To add a package — edit the file and re-run `./scripts/setup-pi.sh`.
 
 ---
 
-## 🛠️ Verification
-
-After setup, confirm everything is installed:
-
-```bash
-pi list
-```
-
----
-
-## 📁 Project Structure
+## 📁 Layout
 
 ```
-.pi/
-├── scripts/
-│   └── setup-pi.sh      # One-command bootstrap
-├── settings.json        # Package registry
-├── agent/               # Custom agent definitions
-├── git/                 # Git-cloned packages
-└── npm/                 # NPM-installed packages
+~/.pi/
+├── scripts/setup-pi.sh   # Bootstrap script
+├── settings.json         # Package registry
+├── agent/
+│   ├── skills/           # → symlinks to installed skills
+│   ├── extensions/       # Custom extensions
+│   ├── git/              # Git-cloned packages
+│   └── sessions/         # Session history
+├── git/                  # (ignored) cloned package data
+└── npm/                  # (ignored) npm package data
 ```
 
 ---
 
 ## 💡 Tips
 
-- **New machine?** Clone → run setup → done. Your entire pi environment is version-controlled.
-- **Update packages?** Pull the latest changes and re-run `./scripts/setup-pi.sh`.
-- **Add a new package?** Edit `settings.json` and re-run the script.
-
----
-
-## 📄 License
-
-This repo is provided as-is. Check individual packages for their respective licenses.
+| Need | Command |
+|---|---|
+| New machine | `git clone → chmod → ./setup-pi.sh` |
+| Add a package | Edit `settings.json` → re-run script |
+| Check installs | `pi list` |
+| Verify `cm` | `cm stats .` |
 
 ---
 
