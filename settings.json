@@ -2,7 +2,6 @@
   "packages": [
     "npm:pi-hooks",
     "npm:pi-rtk-optimizer",
-    "git:git@github.com:elpapi42/pi-codemapper.git",
     "git:github.com/elpapi42/pi-minimal-subagent",
     "npm:pi-observational-memory",
     "git:github.com/elpapi42/pi-fork",
