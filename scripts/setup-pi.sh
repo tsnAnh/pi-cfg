@@ -179,6 +179,21 @@ if [ "$SOURCE_AGENT_REAL" != "$TARGET_AGENT" ]; then
   sync_directory "skills/test-audit"
   sync_directory "skills/jev-use"
   sync_directory "skills/gui-automation"
+  if [ "$TARGET_AGENT" = "$HOME/.pi/agent" ] && [ -d "$HOME/.agents/skills" ]; then
+    for live_skill in "$TARGET_AGENT"/skills/*; do
+      [ -d "$live_skill" ] || continue
+      skill_name="$(basename "$live_skill")"
+      [ ! -d "$SOURCE_AGENT/skills/$skill_name" ] || continue
+      canonical_skill="$HOME/.agents/skills/$skill_name"
+      [ -d "$canonical_skill" ] || continue
+      if diff -qr --exclude .DS_Store --exclude __pycache__ --exclude '*.pyc' "$live_skill" "$canonical_skill" >/dev/null 2>&1; then
+        mkdir -p "$BACKUP_ROOT/duplicate-skills"
+        mv "$live_skill" "$BACKUP_ROOT/duplicate-skills/$skill_name" || die "Failed to archive duplicate skill $skill_name"
+        BACKUP_CREATED=1
+        ok "archived duplicate skill $skill_name"
+      fi
+    done
+  fi
   for retired in extensions/pi-rtk-optimizer extensions/jev-browser jev.json; do
     if [ -e "$TARGET_AGENT/$retired" ]; then
       mkdir -p "$(dirname "$BACKUP_ROOT/$retired")"

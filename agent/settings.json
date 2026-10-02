@@ -3,23 +3,23 @@
   "defaultProvider": "openai-codex",
   "defaultModel": "gpt-5.6-luna",
   "defaultThinkingLevel": "low",
+  "quietStartup": true,
   "enabledModels": [
     "openai-codex/*",
     "titox/titox/deepseek-v4-flash"
   ],
   "packages": [
-    "npm:pi-zentui@0.25.0",
-    "npm:cc-safety-net@2.4.4",
-    "npm:pi-subagents@0.70.0",
-    "npm:pi-web-access@0.30.0",
-    "npm:pi-ask-user@0.15.0",
-    "npm:pi-hashline-edit-pro@4.3.5",
-    "npm:pi-lens@4.2.1",
+    "npm:pi-zentui@0.28.0",
+    "npm:cc-safety-net@2.5.1",
+    "npm:pi-subagents@0.74.0",
+    "npm:pi-web-access@0.35.0",
+    "npm:pi-ask-user@0.15.1",
+    "npm:pi-hashline-edit-pro@5.0.0",
+    "npm:pi-lens@4.3.0",
     "npm:pi-simplify@0.2.3",
-    "npm:pi-mcp-adapter@2.34.0",
     "npm:@weshipwork/pi-herdr@0.1.0",
     {
-      "source": "git:github.com/emilkowalski/skills@85e8e2363b713506e1d5b6e07a0eb2da66be1bc3",
+      "source": "git:github.com/emilkowalski/skills@d16ebe60d09a5ba2afcb7054ede9d0a10c9f6128",
       "skills": [
         "skills/apple-design"
       ]

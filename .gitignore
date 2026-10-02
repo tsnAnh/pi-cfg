@@ -41,3 +41,5 @@ agent/extensions/**/__pycache__/
 agent/extensions/**/*.pyc
 # ── OS
 .DS_Store
+
+/.agents/hooks/state/

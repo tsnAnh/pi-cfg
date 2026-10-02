@@ -3,10 +3,6 @@
     "target": "ES2022",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "baseUrl": ".",
-    "paths": {
-      "@earendil-works/*": ["node_modules/@earendil-works/*"]
-    },
     "strict": true,
     "allowImportingTsExtensions": true,
     "noEmit": true,

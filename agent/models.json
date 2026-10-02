@@ -1,5 +1,15 @@
 {
   "providers": {
+    "openai-codex": {
+      "modelOverrides": {
+        "gpt-6-luna": {
+          "contextWindow": 1000000
+        },
+        "gpt-6-sol": {
+          "contextWindow": 500000
+        }
+      }
+    },
     "titox": {
       "baseUrl": "https://ai.titox.io/v1",
       "api": "openai-completions",

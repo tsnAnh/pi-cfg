@@ -6,7 +6,7 @@ import { CuaController } from "./src/controller.js";
 import { DriverClient } from "./src/driver-client.js";
 import { isForegroundAllowed } from "./src/focus-state.js";
 import { ActionPolicy, type ConfirmationRequest } from "./src/policy.js";
-import { GuestRuntime, type GuestRunResult } from "./src/runtime.js";
+import type { GuestRuntime, GuestRunResult } from "./src/runtime.js";
 import type { HostOutput, JsonValue } from "./src/types.js";
 
 const ReplParams = Type.Object({
@@ -40,12 +40,13 @@ class RuntimeService {
   private controller = new CuaController(this.driver, this.bridge);
   private policy = new ActionPolicy();
   private execution?: { signal?: AbortSignal; ctx: ExtensionContext };
-  private guest = this.createGuest();
+  private guest?: GuestRuntime;
+  private guestLoading?: Promise<GuestRuntime>;
 
   async execute(code: string, signal: AbortSignal | undefined, ctx: ExtensionContext): Promise<GuestRunResult> {
     this.controller.clearOutput();
     this.execution = { signal, ctx };
-    try { return await this.guest.run(code, signal); }
+    try { return await (await this.getGuest()).run(code, signal); }
     finally { this.execution = undefined; }
   }
 
@@ -57,14 +58,14 @@ class RuntimeService {
   }
 
   async reset(): Promise<void> {
-    await this.guest.reset();
+    await this.disposeGuest();
     await this.controller.reset();
     this.policy.reset();
     this.recreate();
   }
 
   async endTurn(): Promise<void> {
-    await this.guest.reset();
+    await this.disposeGuest();
     await this.controller.endTurn();
     this.policy.reset();
     this.recreate();
@@ -78,22 +79,36 @@ class RuntimeService {
     this.driver = new DriverClient();
     this.bridge = new BrowserBridgeClient();
     this.controller = new CuaController(this.driver, this.bridge);
-    this.guest = this.createGuest();
   }
 
-  private createGuest(): GuestRuntime {
-    return new GuestRuntime({
-      invoke: async (method, args, guestSignal) => {
-        const execution = this.execution;
-        if (!execution) throw new Error("CUA host calls are only available during cua_repl_js execution");
-        return this.invoke(method, args, guestSignal ?? execution.signal, execution.ctx);
-      },
-      takeOutput: () => {
-        const output: HostOutput = { text: [...this.controller.output.text], images: [...this.controller.output.images] };
-        this.controller.clearOutput();
-        return output;
-      },
-    });
+  private async getGuest(): Promise<GuestRuntime> {
+    if (this.guest) return this.guest;
+    if (!this.guestLoading) {
+      this.guestLoading = import("./src/runtime.js").then(({ GuestRuntime }) => {
+        const guest = new GuestRuntime({
+          invoke: async (method, args, guestSignal) => {
+            const execution = this.execution;
+            if (!execution) throw new Error("CUA host calls are only available during cua_repl_js execution");
+            return this.invoke(method, args, guestSignal ?? execution.signal, execution.ctx);
+          },
+          takeOutput: () => {
+            const output: HostOutput = { text: [...this.controller.output.text], images: [...this.controller.output.images] };
+            this.controller.clearOutput();
+            return output;
+          },
+        });
+        this.guest = guest;
+        return guest;
+      }).finally(() => { this.guestLoading = undefined; });
+    }
+    return this.guestLoading;
+  }
+
+  private async disposeGuest(): Promise<void> {
+    const guest = this.guest ?? (this.guestLoading ? await this.guestLoading : undefined);
+    this.guest = undefined;
+    this.guestLoading = undefined;
+    await guest?.reset();
   }
 
   private async confirm(request: ConfirmationRequest, signal: AbortSignal | undefined, ctx: ExtensionContext): Promise<void> {

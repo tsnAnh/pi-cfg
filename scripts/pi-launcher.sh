@@ -16,8 +16,12 @@ LAUNCHER_SOURCE="$REPO_ROOT/scripts/pi-launcher.sh"
 STATE_DIR="${PI_AUTO_UPDATE_STATE_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/pi-cfg}"
 LOCK_DIR="$STATE_DIR/update.lock"
 STAMP_FILE="$STATE_DIR/last-success"
+CUA_STAMP_FILE="$STATE_DIR/cua-ready"
 LOG_FILE="$STATE_DIR/update.log"
-INTERVAL_SECONDS="${PI_AUTO_UPDATE_INTERVAL_SECONDS:-0}"
+INTERVAL_SECONDS="${PI_AUTO_UPDATE_INTERVAL_SECONDS:-21600}"
+CUA_INTERVAL_SECONDS="${PI_CUA_CHECK_INTERVAL_SECONDS:-21600}"
+BACKGROUND_TASK="${PI_CFG_BACKGROUND_TASK:-}"
+BACKGROUND_DELAY_SECONDS="${PI_BACKGROUND_PREFLIGHT_DELAY_SECONDS:-3}"
 
 warn() { printf '\033[33mPi preflight: %s\033[0m\n' "$1" >&2; }
 progress() { printf 'Pi preflight: %s\n' "$1" >&2; }
@@ -35,25 +39,93 @@ load_typesafe_key() {
 
 load_typesafe_key
 
+cache_directory_is_safe() {
+  case "$STATE_DIR" in
+    ""|"/"|"$HOME"|"${HOME}/") return 1 ;;
+    *) return 0 ;;
+  esac
+}
+
+cache_age_is_fresh() {
+  local stamp_file="$1" interval="$2" last_success now
+  [ "$interval" -gt 0 ] 2>/dev/null || return 1
+  [ -f "$stamp_file" ] || return 1
+  last_success="$(sed -n '1p' "$stamp_file" 2>/dev/null || true)"
+  case "$last_success" in ''|*[!0-9]*) return 1 ;; esac
+  now="$(date +%s)"
+  [ $((now - last_success)) -ge 0 ] && [ $((now - last_success)) -lt "$interval" ]
+}
+
+update_cache_is_fresh() {
+  cache_age_is_fresh "$STAMP_FILE" "$INTERVAL_SECONDS"
+}
+
+write_update_cache() {
+  local temporary
+  temporary="$STAMP_FILE.tmp.$$"
+  printf '%s\n' "$(date +%s)" > "$temporary"
+  chmod 600 "$temporary" 2>/dev/null || true
+  mv "$temporary" "$STAMP_FILE"
+}
+
+clear_cua_cache() {
+  cache_directory_is_safe || return 0
+  rm -f "$CUA_STAMP_FILE" 2>/dev/null || true
+}
+
+cua_cache_is_fresh() {
+  local target_agent driver_path
+  target_agent="${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}"
+  driver_path="$(command -v cua-driver 2>/dev/null || true)"
+  case "$CUA_INTERVAL_SECONDS" in ''|*[!0-9]*) CUA_INTERVAL_SECONDS=21600 ;; esac
+  [ -n "$driver_path" ] &&
+    [ -S "$target_agent/browser-group.sock" ] &&
+    [ -f "$target_agent/browser-group/extension/manifest.json" ] &&
+    [ -f "$target_agent/browser-group/check-bridge.mjs" ] &&
+    cache_directory_is_safe &&
+    cache_age_is_fresh "$CUA_STAMP_FILE" "$CUA_INTERVAL_SECONDS"
+}
+
 check_cua_runtime() {
+  local version permissions tools bridge_socket manifest bridge_check version_ok driver_path temporary
+  bridge_socket="${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}/browser-group.sock"
+  manifest="${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}/browser-group/extension/manifest.json"
+  bridge_check="${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}/browser-group/check-bridge.mjs"
+  driver_path="$(command -v cua-driver 2>/dev/null || true)"
+  if cua_cache_is_fresh; then return 0; fi
   progress "Checking CUA Driver and Chrome bridge"
-  if ! command -v cua-driver >/dev/null 2>&1; then warn "CUA unavailable: install Cua Driver 0.28.2 or newer"; return 0; fi
-  local version permissions tools bridge_socket manifest version_ok
+  if [ -z "$driver_path" ]; then clear_cua_cache; warn "CUA unavailable: install Cua Driver 0.28.2 or newer"; return 0; fi
   version="$(cua-driver --version 2>/dev/null | awk '{print $2}')"
   version_ok="$(node -e 'const [a,b,p]=process.argv[1].split(".").map(Number);process.stdout.write(a>0||b>28||(b===28&&p>=2)?"yes":"no")' "$version" 2>/dev/null || printf no)"
-  if [ "$version_ok" != "yes" ]; then warn "CUA unavailable: Cua Driver >=0.28.2 is required (found ${version:-unknown})"; return 0; fi
-  if ! cua-driver status >/dev/null 2>&1; then warn "CUA unavailable: start the CuaDriver app daemon"; return 0; fi
+  if [ "$version_ok" != "yes" ]; then clear_cua_cache; warn "CUA unavailable: Cua Driver >=0.28.2 is required (found ${version:-unknown})"; return 0; fi
+  if ! cua-driver status >/dev/null 2>&1; then clear_cua_cache; warn "CUA unavailable: start the CuaDriver app daemon"; return 0; fi
   permissions="$(cua-driver permissions status --json 2>/dev/null || true)"
   if ! printf '%s' "$permissions" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{const v=JSON.parse(s);process.exit(v.accessibility&&v.screen_recording?0:1)}catch{process.exit(1)}})' ; then
-    warn "CUA unavailable: grant Accessibility and Screen Recording to CuaDriver"; return 0
+    clear_cua_cache; warn "CUA unavailable: grant Accessibility and Screen Recording to CuaDriver"; return 0
   fi
   tools="$(cua-driver list-tools 2>/dev/null || true)"
-  if ! printf '%s' "$tools" | grep -q 'set_agent_cursor_enabled'; then warn "CUA unavailable: this Driver build lacks the agent cursor overlay"; return 0; fi
-  bridge_socket="$HOME/.pi/agent/browser-group.sock"
-  manifest="$HOME/.pi/agent/browser-group/extension/manifest.json"
-  if [ ! -f "$manifest" ]; then warn "CUA browser unavailable: run scripts/setup-pi.sh"; return 0; fi
-  if [ ! -S "$bridge_socket" ] || ! node "$HOME/.pi/agent/browser-group/check-bridge.mjs" >/dev/null 2>&1; then warn "CUA browser unavailable: reload Pikachu Browser Use from ~/.pi/agent/browser-group/extension in Chrome; the expected handshake is not active"; return 0; fi
+  if ! printf '%s' "$tools" | grep -q 'set_agent_cursor_enabled'; then clear_cua_cache; warn "CUA unavailable: this Driver build lacks the agent cursor overlay"; return 0; fi
+  if [ ! -f "$manifest" ]; then clear_cua_cache; warn "CUA browser unavailable: run scripts/setup-pi.sh"; return 0; fi
+  if [ ! -S "$bridge_socket" ] || ! node "$bridge_check" >/dev/null 2>&1; then clear_cua_cache; warn "CUA browser unavailable: reload Pikachu Browser Use from ${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}/browser-group/extension in Chrome; the expected handshake is not active"; return 0; fi
+  if cache_directory_is_safe; then
+    mkdir -p "$STATE_DIR"
+    chmod 700 "$STATE_DIR" 2>/dev/null || true
+    temporary="$CUA_STAMP_FILE.tmp.$$"
+    printf '%s\n' "$(date +%s)" > "$temporary"
+    chmod 600 "$temporary" 2>/dev/null || true
+    mv "$temporary" "$CUA_STAMP_FILE"
+  fi
   progress "CUA ready: Driver $version, permissions, cursor overlay, and Chrome bridge"
+}
+
+schedule_background_task() {
+  local task="$1"
+  case "$BACKGROUND_DELAY_SECONDS" in ''|*[!0-9]*) BACKGROUND_DELAY_SECONDS=3 ;; esac
+  nohup sh -c '
+    sleep "$1"
+    export PI_CFG_BACKGROUND_TASK="$2"
+    exec "$3"
+  ' sh "$BACKGROUND_DELAY_SECONDS" "$task" "$LAUNCHER_SOURCE" </dev/null >> "$LOG_FILE" 2>&1 &
 }
 
 resolve_real_pi() {
@@ -91,17 +163,19 @@ for argument in "$@"; do
   fi
 done
 
+if [ "$BACKGROUND_TASK" = "cua" ]; then
+  check_cua_runtime
+  exit 0
+fi
 if [ "$SKIP_UPDATE" = "0" ] || [ "${PI_CFG_UPDATE_RUNNING:-0}" = "1" ]; then
   check_cua_runtime
   exec "$REAL_PI" "${FORWARDED_ARGS[@]}"
 fi
 
-case "$STATE_DIR" in
-  ""|"/"|"$HOME"|"${HOME}/")
+if ! cache_directory_is_safe; then
     warn "unsafe update-state directory; starting without the preflight"
     exec "$REAL_PI" "${FORWARDED_ARGS[@]}"
-    ;;
-esac
+fi
 
 case "$INTERVAL_SECONDS" in
   ''|*[!0-9]*) warn "invalid PI_AUTO_UPDATE_INTERVAL_SECONDS; updating now"; INTERVAL_SECONDS=0 ;;
@@ -109,19 +183,23 @@ esac
 
 mkdir -p "$STATE_DIR"
 chmod 700 "$STATE_DIR" 2>/dev/null || true
-
-update_due=1
-if [ "$INTERVAL_SECONDS" -gt 0 ] && [ -f "$STAMP_FILE" ]; then
-  last_success="$(sed -n '1p' "$STAMP_FILE" 2>/dev/null || true)"
-  case "$last_success" in
-    ''|*[!0-9]*) ;;
-    *)
-      now="$(date +%s)"
-      if [ $((now - last_success)) -lt "$INTERVAL_SECONDS" ]; then update_due=0; fi
-      ;;
-  esac
+if [ -z "${NODE_COMPILE_CACHE:-}" ] && [ "${NODE_DISABLE_COMPILE_CACHE:-0}" != "1" ]; then
+  NODE_COMPILE_CACHE="$STATE_DIR/node-compile-cache"
+  mkdir -p "$NODE_COMPILE_CACHE"
+  chmod 700 "$NODE_COMPILE_CACHE" 2>/dev/null || true
+  export NODE_COMPILE_CACHE
 fi
 
+update_due=1
+if update_cache_is_fresh; then
+  update_due=0
+fi
+if [ "$update_due" -eq 1 ] && [ "$INTERVAL_SECONDS" -gt 0 ] && [ -f "$STAMP_FILE" ] && [ -z "$BACKGROUND_TASK" ]; then
+  schedule_background_task update
+  update_due=0
+fi
+
+update_attempted=0
 if [ "$update_due" -eq 1 ]; then
   lock_acquired=0
   if mkdir "$LOCK_DIR" 2>/dev/null; then
@@ -141,6 +219,7 @@ if [ "$update_due" -eq 1 ]; then
   fi
 
   if [ "$lock_acquired" -eq 1 ]; then
+    update_attempted=1
     printf '%s\n' "$$" > "$LOCK_DIR/pid"
     cleanup_lock() {
       rm -f "$LOCK_DIR/pid"
@@ -186,7 +265,7 @@ if [ "$update_due" -eq 1 ]; then
       "$REPO_ROOT/scripts/update-pi.sh" >> "$LOG_FILE" 2>&1 || update_status=$?
 
     if [ "$update_status" -eq 0 ]; then
-      if [ "$refresh_status" -eq 0 ]; then date +%s > "$STAMP_FILE"; fi
+      if [ "$refresh_status" -eq 0 ]; then write_update_cache; clear_cua_cache; fi
       if [ "$refresh_status" -eq 0 ]; then
         progress "Ready"
       else
@@ -204,7 +283,15 @@ if [ "$update_due" -eq 1 ]; then
   fi
 fi
 
-check_cua_runtime
+if [ "$BACKGROUND_TASK" = "update" ]; then
+  check_cua_runtime
+  exit 0
+fi
+if [ "$update_attempted" -eq 1 ] || [ "$CUA_INTERVAL_SECONDS" = "0" ]; then
+  check_cua_runtime
+elif ! cua_cache_is_fresh; then
+  schedule_background_task cua
+fi
 
 # A self-update can replace the executable, so resolve it again immediately before launch.
 REAL_PI="$(resolve_real_pi || true)"

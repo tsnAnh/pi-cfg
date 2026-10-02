@@ -2,21 +2,16 @@
   "mcpServers": {
     "trello": {
       "url": "https://mcp.trello.com/v1",
-      "auth": "oauth",
-      "lifecycle": "lazy"
+      "exposure": "codemode"
     },
     "revenuecat": {
       "url": "https://mcp.revenuecat.ai/mcp",
-      "auth": "oauth",
-      "lifecycle": "lazy"
+      "exposure": "codemode"
     },
     "jev-android": {
       "command": "pikachu-jev-android-mcp",
-      "lifecycle": "lazy",
-      "idleTimeout": 10,
-      "requestTimeoutMs": 300000,
-      "directTools": true,
-      "toolPrefix": "server"
+      "timeout": 300,
+      "exposure": "codemode"
     }
   }
 }

@@ -15,17 +15,17 @@ agent**, **subagent orchestration**, or **automatic Pi updater**.
 |---|---|
 | Context compaction | Native Pi compaction using the active coding-agent model |
 | Model routing | Local TypeSafe-backed Jev controller for Luna and Sol tiers |
-| Code intelligence | `pi-lens@4.2.1` for LSP, diagnostics, symbols, and AST search |
-| Editing | `pi-hashline-edit-pro@4.3.5` for hash-anchored changes |
-| Delegation | `pi-subagents@0.70.0` and `@weshipwork/pi-herdr@0.1.0` |
+| Code intelligence | `pi-lens@4.3.0` for LSP, diagnostics, symbols, and AST search |
+| Editing | `pi-hashline-edit-pro@5.0.0` for hash-anchored changes |
+| Delegation | `pi-subagents@0.74.0` and `@weshipwork/pi-herdr@0.1.0` |
 | Review | pi-subagents' maintained parallel-review workflow |
-| Web research | `pi-web-access@0.30.0`, activated only when needed |
+| Web research | `pi-web-access@0.35.0`, activated only when needed |
 | Computer use | Cua Driver for desktop apps; agent-owned background Chrome tabs for browser use |
-| Android automation | `jev-android-automator@0.1.0` as a lazy, checksum-verified MCP runtime |
-| User questions | `pi-ask-user@0.15.0`, active from session start |
-| MCP integration | `pi-mcp-adapter@2.34.0` with lazy Cua Driver, Trello, RevenueCat, and Android servers |
-| Terminal UI | `pi-zentui@0.25.0` as the persistent footer and UI owner |
-| Command safety | `cc-safety-net@2.4.4` with its standard protection profile |
+| Android automation | `jev-android-automator@0.1.0` as a checksum-verified native MCP runtime |
+| User questions | `pi-ask-user@0.15.1`, active from session start |
+| MCP integration | Pi 1.0.0 built-in MCP with Trello, RevenueCat, and Android servers exposed through codemode |
+| Terminal UI | `pi-zentui@0.28.0` as the persistent footer and UI owner |
+| Command safety | `cc-safety-net@2.5.1` with its standard protection profile |
 | Simplification | `pi-simplify@0.2.3` for focused post-change cleanup |
 | Test quality | `test-audit` skill for test authoring and focused audits |
 | Design guidance | `emilkowalski/skills`, pinned and filtered to `apple-design` |
@@ -36,7 +36,9 @@ All npm and Git packages are pinned to an exact version or commit in
 version and SHA-256 in [`agent/android-automator.json`](agent/android-automator.json).
 
 The default profile uses the dark theme, `openai-codex/gpt-5.6-luna`, and low thinking. The model
-picker includes the configured OpenAI Codex models. MCP endpoints are defined without credentials in
+picker includes the configured OpenAI Codex models. The local catalog metadata advertises a
+1,000,000-token context window for `gpt-6-luna` and 500,000 tokens for `gpt-6-sol`. MCP endpoints
+are defined without credentials in
 [`agent/mcp.json`](agent/mcp.json); OAuth credentials remain in Pi's credential storage.
 
 ## Workflow features
@@ -78,10 +80,10 @@ credentials, unavailable models, and request failures keep the current model.
 ### Lazy specialist tools
 
 Core file and shell tools, hashline editing, todos, safety tooling, `ask_user`, and the selected
-delegation tool start active. Web research, computer use, Android automation, pi-lens tools,
-and general MCP tools start hidden to keep the model's tool surface small. Computer use and Android
-automation are separate specialist groups, so activating either keeps web-search and unrelated
-direct tools hidden. The shared `mcp` gateway remains available for first-run tool discovery.
+delegation tool start active. Jev activates web research, computer use, and pi-lens extension tools
+when needed. Native MCP tools, including Android automation, use Pi's separate `codemode` discovery
+through `searchTools()` and `ALL_TOOLS`. Their schemas stay out of the initial tool declarations,
+but Jev specialist activation does not restrict access through codemode.
 
 ```text
 jev_find_tools({ query: "search current documentation and inspect symbol references" })
@@ -116,10 +118,11 @@ Computer actions can cause external side effects. Give the agent a narrow, verif
 ### Android automation
 
 The `jev-android` MCP server exposes the attached `jev-android-automator@0.1.0` control plane as a
-lazy Android specialist. Its direct tools cover emulator status and lifecycle, debug APK builds and
+native MCP server with codemode exposure. Its tools cover emulator status and lifecycle, debug APK builds and
 installation, app control, indexed observation and actions, bounded Logcat, checkpoints, and the
-high-level `android_run_goal` loop. Use `jev_find_tools` with an Android request to activate only this
-group; the server process and emulator remain stopped until an Android tool is called.
+high-level `android_run_goal` loop. Discover its `mcp__jev_android` namespace through `codemode`.
+Pi connects enabled MCP servers in the background at session startup. This starts the Android server,
+while emulator startup remains an explicit tool action.
 
 Setup reads [`agent/android-automator.json`](agent/android-automator.json), verifies the release wheel
 against its recorded SHA-256, exports exact dependencies from the attached project's `uv.lock`, and
@@ -251,7 +254,9 @@ security delete-generic-password -a "$USER" -s "pikachu.typesafe-api-key"
 Setup validates JSON, package pins, Node and Pi availability, and local extension lockfiles before
 deploying. It synchronizes only repository-owned files to `~/.pi/agent`, backs up replaced files,
 and preserves unknown live extensions, skills, credentials, and externally managed Herdr or Orca
-files.
+files. When an unknown live skill is byte identical to the same skill in `~/.agents/skills`, setup
+archives the redundant `~/.pi/agent/skills` copy to prevent duplicate loading and startup conflict
+output; different copies are preserved.
 
 The [`jev-use` skill](agent/skills/jev-use/SKILL.md) and [`test-audit` skill](agent/skills/test-audit/SKILL.md) are synced from the repository. The latter's
 source is [OpenClaw at commit `9b0a71e`](https://github.com/openclaw/openclaw/tree/9b0a71ed078587f8267a4d32d61070154bdf3904/.agents/skills/test-audit).
@@ -264,6 +269,11 @@ To validate or deploy another Pi profile:
 ```bash
 scripts/setup-pi.sh --target /absolute/path/to/agent
 ```
+
+Pi 1.0.0 supplies native MCP support. The external `pi-mcp-adapter` package is no longer installed.
+The native configuration uses `exposure` and a `timeout` in seconds. Adapter-only lazy lifecycle
+and tool-prefix settings are removed. Existing adapter OAuth sessions might require a new sign-in
+through `pi mcp login trello` or `pi mcp login revenuecat`.
 
 ## Automatic Pi updates
 
@@ -282,11 +292,23 @@ prevent Pi from starting with the current installation. A process lock prevents 
 launches from running competing updates.
 The launcher prints each preflight phase in the terminal; detailed command output stays in the
 private update log. Progress goes to stderr so Pi's JSON and RPC stdout remain machine-readable.
+Successful startup work and CUA readiness are cached for six hours by default. A cached launch does
+not run Git, Node, CUA Driver, checksums, or bridge probes and prints no preflight progress; it reads
+the timestamp and immediately starts Pi. When a cache expires, Pi also starts immediately while a
+delayed background worker validates the checkout and refreshes the installation for the next launch.
+The first installation and an explicitly forced preflight remain synchronous. Run the complete
+preflight explicitly after a local configuration edit when it must take effect immediately. Pi's
+quiet startup mode also avoids rendering the full resource inventory before showing the prompt.
+The launcher also enables Node's persistent module compile cache under `~/.cache/pi-cfg`, which
+lets later Pi processes reuse compiled extension bytecode. Set `NODE_DISABLE_COMPILE_CACHE=1` to
+disable that runtime cache for troubleshooting.
 
 ```bash
 pi --skip-update                         # skip once
 PI_AUTO_UPDATE=0 pi                      # skip for this invocation
 PI_AUTO_UPDATE_INTERVAL_SECONDS=21600 pi # update at most once every six hours
+PI_CUA_CHECK_INTERVAL_SECONDS=21600 pi   # recheck CUA at most once every six hours
+PI_AUTO_UPDATE_INTERVAL_SECONDS=0 pi     # force the complete preflight
 ```
 
 The update log is stored at `~/.cache/pi-cfg/update.log`. Manual updates use the same deployment
